@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 import '../utils/journal_database.dart';
 import '../models/journal_entry.dart';
 
@@ -91,6 +91,25 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   int? repair_true = 0;
   int? isNeglect = 0;
   int? isRepair = 0;
+  void _share() {
+    final entryInput = _controller.text;
+    final shareText =
+        "Journal Entry: $entryInput\n"
+        "Score: $score\n"
+        "Reasoning: $reasoning\n"
+        "Confidence: $confidence\n"
+        "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
+        "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
+
+    //Share.share(shareText); // Use the Share class from the share_plus package
+    if (kDebugMode) {
+      print('[0] Sharing the following text: $shareText'); // Debug 0
+    }
+
+    // Share the text using your preferred method (e.g., share plugin)
+    // For example, using the share_plus package:
+    // Share.share(shareText);
+  }
 
   void _submitText() async {
     final entryInput = _controller.text;
@@ -313,7 +332,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
           children: [
             TextField(
               controller: _controller,
-              maxLines: 8,
+              maxLines: 6,
               decoration: const InputDecoration(
                 labelText: "Enter your journal entry",
                 border: OutlineInputBorder(),
@@ -355,6 +374,19 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
               Text(
                 "Confidence: $confidence",
                 style: const TextStyle(fontSize: 16),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                onPressed: _share,
+                child: const Text("Share"),
               ),
             ],
           ],
