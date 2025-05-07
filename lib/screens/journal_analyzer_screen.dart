@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 //import 'dart:io';
 import '../utils/journal_database.dart';
 import '../models/journal_entry.dart';
@@ -93,6 +94,60 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   int? repair_true = 0;
   int? isNeglect = 0;
   int? isRepair = 0;
+  // void _share() {
+  //   final entryInput = _controller.text;
+  //   final shareText =
+  //       "Journal Entry: $entryInput\n"
+  //       "Score: $score\n"
+  //       "Reasoning: $reasoning\n"
+  //       "Confidence: $confidence\n"
+  //       "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
+  //       "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
+
+  //   // Send the SMS using the sms scheme
+  //   sendSMS('7274236131', shareText);
+  //   //send email
+  //   // sendEmail(
+  //   //   to: 'hillabrahams@gmail.com',
+  //   //   subject: 'Journal Entry Analysis',
+  //   //   body: shareText,
+  //   // );
+  //   if (kDebugMode) {
+  //     print('[0] Sharing the following text: $shareText'); // Debug 0
+  //   }
+  // }
+  String? _savedPhoneNumber; // Add this variable to store the retrieved number
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPhoneNumber(); // Load the number when the screen initializes
+  }
+
+  Future<void> _loadSavedPhoneNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _savedPhoneNumber = prefs.getString('saved_phone_number');
+    });
+  }
+
+  Future<void> sendSMS(String phoneNumber, String message) async {
+    final uri = Uri(
+      scheme: 'sms',
+      path: phoneNumber,
+      queryParameters: {'body': message},
+    );
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (kDebugMode) {
+        print('Could not launch SMS app');
+      }
+      // Optionally show an error to the user
+    }
+  }
+
   void _share() {
     final entryInput = _controller.text;
     final shareText =
@@ -103,16 +158,18 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
         "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
 
-    // Send the SMS using the sms scheme
-    sendSMS('7274236131', shareText);
-    //send email
-    // sendEmail(
-    //   to: 'hillabrahams@gmail.com',
-    //   subject: 'Journal Entry Analysis',
-    //   body: shareText,
-    // );
+    // Use the saved phone number if available, otherwise show error
+    if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
+      sendSMS(_savedPhoneNumber!, shareText);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No phone number saved for sharing')),
+      );
+    }
+
     if (kDebugMode) {
-      print('[0] Sharing the following text: $shareText'); // Debug 0
+      print('[0] Sharing the following text: $shareText');
+      print('[1] Using phone number: $_savedPhoneNumber');
     }
   }
 
@@ -340,20 +397,20 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   //     throw 'Could not launch $smsUri';
   //   }
   // }
-  Future<void> sendSMS(String phoneNumber, String message) async {
-    final encodedMessage = Uri.encodeComponent(message); // Encode the message
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: phoneNumber,
-      queryParameters: {'body': encodedMessage},
-    );
+  // Future<void> sendSMS(String phoneNumber, String message) async {
+  //   final encodedMessage = Uri.encodeComponent(message); // Encode the message
+  //   final Uri smsUri = Uri(
+  //     scheme: 'sms',
+  //     path: phoneNumber,
+  //     queryParameters: {'body': encodedMessage},
+  //   );
 
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri);
-    } else {
-      throw 'Could not launch SMS app';
-    }
-  }
+  //   if (await canLaunchUrl(smsUri)) {
+  //     await launchUrl(smsUri);
+  //   } else {
+  //     throw 'Could not launch SMS app';
+  //   }
+  // }
 
   Future<void> sendEmail({
     required String to,
