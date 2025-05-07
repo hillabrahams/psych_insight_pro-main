@@ -54,6 +54,8 @@ dependencies:
 
   flutter_tts: ^3.6.3 
 
+  url_launcher: ^6.1.11
+
 
 
 

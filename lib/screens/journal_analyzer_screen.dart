@@ -10,6 +10,8 @@ import 'dart:async';
 import '../utils/journal_database.dart';
 import '../models/journal_entry.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 class JournalAnalyzerScreen extends StatefulWidget {
   const JournalAnalyzerScreen({super.key});
 
@@ -101,14 +103,17 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
         "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
 
-    //Share.share(shareText); // Use the Share class from the share_plus package
+    // Send the SMS using the sms scheme
+    sendSMS('7274236131', shareText);
+    //send email
+    // sendEmail(
+    //   to: 'hillabrahams@gmail.com',
+    //   subject: 'Journal Entry Analysis',
+    //   body: shareText,
+    // );
     if (kDebugMode) {
       print('[0] Sharing the following text: $shareText'); // Debug 0
     }
-
-    // Share the text using your preferred method (e.g., share plugin)
-    // For example, using the share_plus package:
-    // Share.share(shareText);
   }
 
   void _submitText() async {
@@ -319,6 +324,69 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         print('Error: $e');
       }
       return null;
+    }
+  }
+
+  // Future<void> _sendSMS(String message, String phoneNumber) async {
+  //   final Uri smsUri = Uri(
+  //     scheme: 'sms',
+  //     path: phoneNumber,
+  //     queryParameters: {'body': message},
+  //   );
+
+  //   if (await canLaunchUrl(smsUri)) {
+  //     await launchUrl(smsUri);
+  //   } else {
+  //     throw 'Could not launch $smsUri';
+  //   }
+  // }
+  Future<void> sendSMS(String phoneNumber, String message) async {
+    final encodedMessage = Uri.encodeComponent(message); // Encode the message
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: phoneNumber,
+      queryParameters: {'body': encodedMessage},
+    );
+
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(smsUri);
+    } else {
+      throw 'Could not launch SMS app';
+    }
+  }
+
+  Future<void> sendEmail({
+    required String to,
+    List<String>? cc,
+    List<String>? bcc,
+    String? subject,
+    String? body,
+  }) async {
+    final params = <String, String>{};
+    if (subject != null) params['subject'] = subject;
+    if (body != null) params['body'] = body;
+    if (cc != null && cc.isNotEmpty) params['cc'] = cc.join(',');
+    if (bcc != null && bcc.isNotEmpty) params['bcc'] = bcc.join(',');
+
+    final emailUri = Uri(
+      scheme: 'mailto',
+      path: to,
+      queryParameters: params.isNotEmpty ? params : null,
+    );
+
+    try {
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri);
+      } else {
+        // Fallback: Open webmail
+        await launchUrl(
+          Uri.parse('https://mail.google.com/mail/?view=cm&to=$to'),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error launching email client: $e');
+      }
     }
   }
 

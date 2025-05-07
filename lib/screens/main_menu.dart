@@ -40,6 +40,17 @@ class MainMenu extends StatelessWidget {
               },
               child: Text('Reports'),
             ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              style: AppStyles.buttonStyle,
+              onPressed: () {
+                Navigator.push(
+                  context, // ✅ Make sure this is the correct 'context'
+                  MaterialPageRoute(builder: (context) => ReportsScreen()),
+                );
+              },
+              child: Text('Setup Share Phone Number'),
+            ),
           ],
         ),
       ),
