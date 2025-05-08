@@ -118,7 +118,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                 ElevatedButton(
                   onPressed: _retrievePhoneNumber,
                   style: AppStyles.buttonStyle.copyWith(
-                    backgroundColor: MaterialStateProperty.all(Colors.blueGrey),
+                    backgroundColor: WidgetStateProperty.all(Colors.blueGrey),
                   ),
                   child: const Text('Retrieve Number'),
                 ),

@@ -389,7 +389,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Text('Confidence: ${_selectedEntry!.confidence}'),
                   Text(
                     'Neglect: ${_selectedEntry!.isNeglect == 1 ? "Yes" : "No"}'
-                    ' Repair: ${_selectedEntry!.isRepair == 1 ? "Yes" : "No"}',
+                    ' Repair: ${_selectedEntry!.isRepair == 1 ? "Yes" : "No"}'
+                    ' Shared: ${_selectedEntry!.isShared == 1 ? "Yes" : "No"}',
                   ),
                   Text(
                     'Date & Time: ${_selectedEntry!.timestamp != null ? DateFormat('MM-dd-yyyy hh:mm:ss').format(DateTime.parse(_selectedEntry!.timestamp!)) : "Invalid date"}',

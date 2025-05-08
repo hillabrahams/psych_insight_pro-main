@@ -36,6 +36,7 @@ class DBHelper {
         confidence TEXT NOT NULL,
         isNeglect INTEGER NOT NULL DEFAULT 0,
         isRepair INTEGER NOT NULL DEFAULT 0,
+        isShared INTEGER NOT NULL DEFAULT 0,
         timestamp TEXT NULL 
     ''');
   }
@@ -82,7 +83,7 @@ class DBHelper {
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> updateEntry(JournalEntry entry) async {
+  Future<int> updateEntry0(JournalEntry entry) async {
     final db = await database;
     return await db.update(
       table,

@@ -20,69 +20,6 @@ class JournalAnalyzerScreen extends StatefulWidget {
   _JournalAnalyzerScreenState createState() => _JournalAnalyzerScreenState();
 }
 
-// bool isNeglectFuzzy(String text, {int threshold = 20}) {
-//   final lower = text.toLowerCase();
-//   final List<String> neglectPhrases = [
-//     "no one noticed",
-//     "nobody cared",
-//     "ignored",
-//     "forgotten",
-//     "no one asked",
-//     "you didn’t ask",
-//     "i was upset but",
-//     "you didn’t respond",
-//     "no one called",
-//     "i felt invisible",
-//     "i was left out",
-//     "you didn’t say goodnight",
-//     "you didn’t listen",
-//     "you didn’t see me",
-//     "i don’t think you noticed",
-//     "they didn’t care",
-//     "nobody showed up",
-//     "i didn’t matter",
-//   ];
-
-//   for (var phrase in neglectPhrases) {
-//     if (kDebugMode) {
-//       print("Comparing: $phrase with $lower");
-//       print("Ratio: ${ratio(phrase, lower)}");
-//     }
-//     if (ratio(phrase, lower) > threshold) return true;
-//   }
-
-//   return false;
-// }
-
-// bool isRepairFuzzy(String text, {int threshold = 20}) {
-//   final lower = text.toLowerCase();
-//   final List<String> repairPhrases = [
-//     "sorry",
-//     "apologize",
-//     "forgive",
-//     "make up",
-//     "fix this",
-//     "repair",
-//     "reconcile",
-//     "regret",
-//     "understand",
-//     "didn't mean to",
-//     "move forward",
-//     "want to make things right",
-//     "what can I do",
-//   ];
-
-//   for (var phrase in repairPhrases) {
-//     if (kDebugMode) {
-//       print("Comparing: $phrase with $lower");
-//       print("Ratio: ${ratio(phrase, lower)}");
-//     }
-//     if (ratio(phrase, lower) > threshold) return true;
-//   }
-
-//   return false;
-// }
-
 class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   final TextEditingController _controller = TextEditingController();
   String? score;
@@ -94,28 +31,9 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   int? repair_true = 0;
   int? isNeglect = 0;
   int? isRepair = 0;
-  // void _share() {
-  //   final entryInput = _controller.text;
-  //   final shareText =
-  //       "Journal Entry: $entryInput\n"
-  //       "Score: $score\n"
-  //       "Reasoning: $reasoning\n"
-  //       "Confidence: $confidence\n"
-  //       "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
-  //       "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
+  int? isShared = 0;
+  JournalEntry? currentEntry;
 
-  //   // Send the SMS using the sms scheme
-  //   sendSMS('7274236131', shareText);
-  //   //send email
-  //   // sendEmail(
-  //   //   to: 'hillabrahams@gmail.com',
-  //   //   subject: 'Journal Entry Analysis',
-  //   //   body: shareText,
-  //   // );
-  //   if (kDebugMode) {
-  //     print('[0] Sharing the following text: $shareText'); // Debug 0
-  //   }
-  // }
   String? _savedPhoneNumber; // Add this variable to store the retrieved number
 
   @override
@@ -151,12 +69,25 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   void _share() {
     final entryInput = _controller.text;
     final shareText =
-        "Journal Entry: $entryInput\n"
+        "Journal Entry:\n $entryInput\n"
         "Score: $score\n"
         "Reasoning: $reasoning\n"
         "Confidence: $confidence\n"
         "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
         "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
+
+    //update currentEntry with the latest entry
+    currentEntry = JournalEntry(
+      entry_text: entryInput,
+      score: int.parse(score!),
+      reasoning: reasoning!,
+      confidence: confidence!,
+      isNeglect: isNeglect!,
+      isRepair: isRepair!,
+      isShared: 1, // Mark as shared
+    );
+    // Save the current entry to the database
+    JournalDatabase.instance.updateEntry(currentEntry!);
 
     // Use the saved phone number if available, otherwise show error
     if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
@@ -187,9 +118,12 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         confidence: result['confidence'].toString(),
         isNeglect: result['neglect_true'] ? 1 : 0,
         isRepair: result['repair_true'] ? 1 : 0,
+        isShared: 0,
       );
 
       await JournalDatabase.instance.insertEntry(newEntry);
+
+      currentEntry = newEntry; // Update the current entry
 
       setState(() {
         score = result['score'].toString();
@@ -199,6 +133,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         confidence = result['confidence'].toString();
         isNeglect = result['neglect_true'] ? 1 : 0;
         isRepair = result['repair_true'] ? 1 : 0;
+        isShared = 0;
       });
     } else {
       setState(() {
@@ -209,118 +144,6 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
     }
   }
 
-  // Future<Map<String, dynamic>?> analyzeEntry(String entryText) async {
-  //   final url = Uri.parse("http://192.168.5.88:8000/analyze");
-  //   final response = await http.post(
-  //     url,
-  //     headers: {'Content-Type': 'application/json'},
-  //     body: jsonEncode({"text": entryText}),
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     return jsonDecode(response.body);
-  //   } else {
-  //     return null;
-  //   }
-  // }
-  // Future<Map<String, dynamic>?> analyzeEntry(String entryText) async {
-  //   //const String url = "https://c21c-217-180-196-104.ngrok-free.app/analyze";
-  //   const String url = "http://192.168.5.88:8000/analyze";
-  //   if (kDebugMode) {
-  //     //print('[0] Entry Text: $entryText'); // Debug
-  //     print('[1] Preparing to call API. URL: $url'); // Debug 1
-  //   }
-
-  //   try {
-  //     // Encode the request body
-
-  //     final String requestBody = jsonEncode({"entry": entryText});
-  //     if (kDebugMode) {
-  //       //print('[1] Request Body: $requestBody'); // Debug 1
-  //       print('[2] Request Body: $requestBody'); // Debug 2
-  //       // Add to your try block:
-  //       print('Resolved URL: ${Uri.parse(url).host}');
-  //       print(
-  //         'DNS Lookup: ${await InternetAddress.lookup(Uri.parse(url).host)}',
-  //       );
-  //     }
-
-  //     // Make the POST request
-  //     if (kDebugMode) {
-  //       print('[3] Sending POST request...'); // Debug 3
-  //     }
-  //     // final response = await http
-  //     //     .post(
-  //     //       Uri.parse(url),
-  //     //       headers: {
-  //     //         'Content-Type': 'application/json',
-  //     //         'accept': 'application/json',
-  //     //         'Connection': 'close',
-  //     //       },
-  //     //       body: requestBody,
-  //     //     )
-  //     //     .timeout(Duration(seconds: 45));
-  //     final response = await http
-  //         .post(
-  //           Uri.parse(url),
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //             'accept': 'application/json',
-  //             // Ngrok-specific headers to avoid common issues
-  //             'ngrok-skip-browser-warning': 'true',
-  //             'Accept-Encoding': 'gzip',
-  //           },
-  //           body: requestBody,
-  //         )
-  //         .timeout(Duration(seconds: 25));
-
-  //     if (kDebugMode) {
-  //       print(
-  //         '[4] Request completed. Status Code: ${response.statusCode}',
-  //       ); // Debug 4
-  //       print('[5] Response Body: ${response.body}'); // Debug 5
-  //     }
-
-  //     if (response.statusCode == 307 || response.statusCode == 301) {
-  //       // Server wants to redirect
-  //       String? redirectLocation = response.headers['location'];
-  //       if (kDebugMode) {
-  //         print('[5] Redirecting to: $redirectLocation'); // Debug 5
-  //       }
-  //     }
-  //     if (response.statusCode == 200) {
-  //       if (kDebugMode) {
-  //         print('[6] Success! Parsing JSON...'); // Debug 6
-  //       }
-  //       return jsonDecode(response.body) as Map<String, dynamic>;
-  //     } else {
-  //       if (kDebugMode) {
-  //         print('[7] Error: Non-200 status code'); // Debug 7
-  //       }
-  //       return null;
-  //     }
-  //   } on TimeoutException {
-  //     if (kDebugMode) {
-  //       print('[X] Timeout: Server did not respond in 25 seconds.'); // Error 1
-  //       //print('[X] Timeout: Server did not respond in 10 seconds.'); // Error 1
-  //     }
-
-  //     return null;
-  //   } on http.ClientException catch (e) {
-  //     if (kDebugMode) {
-  //       print('[X] Client Exception: $e'); // Error 2
-  //       print('[X] Network Error: $e'); // Error 2
-  //       print('[X] Is the device on the same network as the server?');
-  //     }
-
-  //     return null;
-  //   } catch (e) {
-  //     if (kDebugMode) {
-  //       print('[X] Unexpected Error: $e'); // Error 3
-  //     }
-  //     return null;
-  //   }
-  // }
   Future<Map<String, dynamic>?> analyzeEntry(String entryText) async {
     const String url = "https://c21c-217-180-196-104.ngrok-free.app/analyze";
     String currentUrl = url;
@@ -383,34 +206,6 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
       return null;
     }
   }
-
-  // Future<void> _sendSMS(String message, String phoneNumber) async {
-  //   final Uri smsUri = Uri(
-  //     scheme: 'sms',
-  //     path: phoneNumber,
-  //     queryParameters: {'body': message},
-  //   );
-
-  //   if (await canLaunchUrl(smsUri)) {
-  //     await launchUrl(smsUri);
-  //   } else {
-  //     throw 'Could not launch $smsUri';
-  //   }
-  // }
-  // Future<void> sendSMS(String phoneNumber, String message) async {
-  //   final encodedMessage = Uri.encodeComponent(message); // Encode the message
-  //   final Uri smsUri = Uri(
-  //     scheme: 'sms',
-  //     path: phoneNumber,
-  //     queryParameters: {'body': encodedMessage},
-  //   );
-
-  //   if (await canLaunchUrl(smsUri)) {
-  //     await launchUrl(smsUri);
-  //   } else {
-  //     throw 'Could not launch SMS app';
-  //   }
-  // }
 
   Future<void> sendEmail({
     required String to,

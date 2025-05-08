@@ -5,6 +5,8 @@ import '../models/journal_entry.dart';
 class JournalDatabase {
   static final JournalDatabase instance = JournalDatabase._init();
 
+  static const String table = "journal_entries";
+
   static Database? _database;
   JournalDatabase._init();
 
@@ -31,6 +33,7 @@ class JournalDatabase {
         confidence TEXT,
         isNeglect INTEGER DEFAULT 0,
         isRepair INTEGER DEFAULT 0,
+        isShared INTEGER DEFAULT 0,
         timestamp TEXT 
       )
     ''');
@@ -39,6 +42,26 @@ class JournalDatabase {
   Future<void> insertEntry(JournalEntry entry) async {
     final db = await instance.database;
     await db.insert('journal_entries', entry.toMap());
+  }
+
+  Future<int> updateEntry(JournalEntry currentEntry) async {
+    final db = await database;
+    return await db.update(
+      'journal_entries',
+      currentEntry.toMap(),
+      where: 'id = ?',
+      whereArgs: [currentEntry.id],
+    );
+  }
+
+  Future<int> updateEntry0(JournalEntry entry) async {
+    final db = await database;
+    return await db.update(
+      table,
+      entry.toMap(),
+      where: 'id = ?',
+      whereArgs: [entry.id],
+    );
   }
 
   Future close() async {

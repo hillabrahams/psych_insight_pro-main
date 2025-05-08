@@ -8,6 +8,7 @@ class JournalEntry {
   final String confidence;
   final int isNeglect;
   final int isRepair;
+  final int isShared;
   final String? timestamp; // ✅ New field (nullable for safety)
 
   JournalEntry({
@@ -18,6 +19,7 @@ class JournalEntry {
     required this.confidence,
     required this.isNeglect,
     required this.isRepair,
+    required this.isShared,
     this.timestamp, // ✅ Include in constructor
   });
 
@@ -30,6 +32,7 @@ class JournalEntry {
       'confidence': confidence,
       'isNeglect': isNeglect == 1 ? 1 : 0,
       'isRepair': isRepair == 1 ? 1 : 0,
+      'isShared': isRepair == 1 ? 1 : 0,
       'timestamp':
           timestamp ??
           DateTime.now().toString(), // ✅ Default to current time if null
@@ -45,6 +48,7 @@ class JournalEntry {
       confidence: map['confidence'],
       isNeglect: map['isNeglect'] == 1 ? 1 : 0,
       isRepair: map['isRepair'] == 1 ? 1 : 0,
+      isShared: map['isShared'] == 1 ? 1 : 0,
       timestamp: map['timestamp'], // ✅ Retrieve from DB
     );
   }
