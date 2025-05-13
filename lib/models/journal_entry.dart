@@ -9,6 +9,7 @@ class JournalEntry {
   final int isNeglect;
   final int isRepair;
   final int isShared;
+  final int isBid;
   final String? timestamp; // ✅ New field (nullable for safety)
 
   JournalEntry({
@@ -20,6 +21,7 @@ class JournalEntry {
     required this.isNeglect,
     required this.isRepair,
     required this.isShared,
+    required this.isBid,
     this.timestamp, // ✅ Include in constructor
   });
 
@@ -33,6 +35,7 @@ class JournalEntry {
       'isNeglect': isNeglect == 1 ? 1 : 0,
       'isRepair': isRepair == 1 ? 1 : 0,
       'isShared': isRepair == 1 ? 1 : 0,
+      'isBid': isBid == 1 ? 1 : 0,
       'timestamp':
           timestamp ??
           DateTime.now().toString(), // ✅ Default to current time if null
@@ -49,6 +52,7 @@ class JournalEntry {
       isNeglect: map['isNeglect'] == 1 ? 1 : 0,
       isRepair: map['isRepair'] == 1 ? 1 : 0,
       isShared: map['isShared'] == 1 ? 1 : 0,
+      isBid: map['isBid'] == 1 ? 1 : 0,
       timestamp: map['timestamp'], // ✅ Retrieve from DB
     );
   }

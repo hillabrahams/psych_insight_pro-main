@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/journal_entry.dart';
@@ -34,6 +35,7 @@ class JournalDatabase {
         isNeglect INTEGER DEFAULT 0,
         isRepair INTEGER DEFAULT 0,
         isShared INTEGER DEFAULT 0,
+        isBid INTEGER DEFAULT 0,
         timestamp TEXT 
       )
     ''');
@@ -45,6 +47,9 @@ class JournalDatabase {
   }
 
   Future<int> updateEntry(JournalEntry currentEntry) async {
+    if (kDebugMode) {
+      print("Updating entry with ID: ${currentEntry.id}");
+    }
     final db = await database;
     return await db.update(
       'journal_entries',

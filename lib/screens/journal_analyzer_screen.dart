@@ -32,6 +32,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   int? isNeglect = 0;
   int? isRepair = 0;
   int? isShared = 0;
+  int? isBid = 0;
   JournalEntry? currentEntry;
 
   String? _savedPhoneNumber; // Add this variable to store the retrieved number
@@ -75,6 +76,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         "Confidence: $confidence\n"
         "Neglect: ${isNeglect == 1 ? 'Yes' : 'No'}\n"
         "Repair: ${isRepair == 1 ? 'Yes' : 'No'}";
+    "Bid: ${isBid == 1 ? 'Yes' : 'No'}";
 
     //update currentEntry with the latest entry
     currentEntry = JournalEntry(
@@ -84,6 +86,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
       confidence: confidence!,
       isNeglect: isNeglect!,
       isRepair: isRepair!,
+      isBid: isBid!,
       isShared: 1, // Mark as shared
     );
     // Save the current entry to the database
@@ -91,7 +94,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
 
     // Use the saved phone number if available, otherwise show error
     if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
-      sendSMS(_savedPhoneNumber!, shareText);
+      sendSMS(_savedPhoneNumber!, Uri.encodeFull((shareText)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No phone number saved for sharing')),
@@ -118,6 +121,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         confidence: result['confidence'].toString(),
         isNeglect: result['neglect_true'] ? 1 : 0,
         isRepair: result['repair_true'] ? 1 : 0,
+        isBid: result['bid_true'] ? 1 : 0,
         isShared: 0,
       );
 
@@ -133,6 +137,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         confidence = result['confidence'].toString();
         isNeglect = result['neglect_true'] ? 1 : 0;
         isRepair = result['repair_true'] ? 1 : 0;
+        isBid = result['bid_true'] ? 1 : 0;
         isShared = 0;
       });
     } else {
