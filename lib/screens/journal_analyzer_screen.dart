@@ -36,6 +36,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   JournalEntry? currentEntry;
 
   String? _savedPhoneNumber; // Add this variable to store the retrieved number
+  int? updateId = 0;
 
   @override
   void initState() {
@@ -80,6 +81,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
 
     //update currentEntry with the latest entry
     currentEntry = JournalEntry(
+      id: updateId,
       entry_text: entryInput,
       score: int.parse(score!),
       reasoning: reasoning!,
@@ -94,7 +96,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
 
     // Use the saved phone number if available, otherwise show error
     if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
-      sendSMS(_savedPhoneNumber!, Uri.encodeFull((shareText)));
+      //sendSMS(_savedPhoneNumber!, Uri.encodeFull((shareText)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No phone number saved for sharing')),
@@ -125,7 +127,10 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         isShared: 0,
       );
 
-      await JournalDatabase.instance.insertEntry(newEntry);
+      updateId = await JournalDatabase.instance.insertEntry(newEntry);
+      if (kDebugMode) {
+        print("Inserted entry with ID for use in update: $updateId");
+      }
 
       currentEntry = newEntry; // Update the current entry
 

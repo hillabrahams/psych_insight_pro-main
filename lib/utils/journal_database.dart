@@ -41,14 +41,19 @@ class JournalDatabase {
     ''');
   }
 
-  Future<void> insertEntry(JournalEntry entry) async {
+  Future<int> insertEntry(JournalEntry entry) async {
     final db = await instance.database;
-    await db.insert('journal_entries', entry.toMap());
+    final insertId = await db.insert('journal_entries', entry.toMap());
+    if (kDebugMode) {
+      print("Inserted entry with ID: $insertId");
+    }
+    return insertId;
   }
 
   Future<int> updateEntry(JournalEntry currentEntry) async {
     if (kDebugMode) {
       print("Updating entry with ID: ${currentEntry.id}");
+      print("Updating entry with isShared: ${currentEntry.isShared}");
     }
     final db = await database;
     return await db.update(

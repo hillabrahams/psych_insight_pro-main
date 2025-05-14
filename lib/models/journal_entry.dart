@@ -34,7 +34,7 @@ class JournalEntry {
       'confidence': confidence,
       'isNeglect': isNeglect == 1 ? 1 : 0,
       'isRepair': isRepair == 1 ? 1 : 0,
-      'isShared': isRepair == 1 ? 1 : 0,
+      'isShared': isShared == 1 ? 1 : 0,
       'isBid': isBid == 1 ? 1 : 0,
       'timestamp':
           timestamp ??
