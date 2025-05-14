@@ -12,6 +12,7 @@ import '../utils/journal_database.dart';
 import '../models/journal_entry.dart';
 
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/notification_service.dart';
 
 class JournalAnalyzerScreen extends StatefulWidget {
   const JournalAnalyzerScreen({super.key});
@@ -37,6 +38,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
 
   String? _savedPhoneNumber; // Add this variable to store the retrieved number
   int? updateId = 0;
+  int? sharedCompleted = 0;
 
   @override
   void initState() {
@@ -68,7 +70,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
     }
   }
 
-  void _share() {
+  Future<void> _share() async {
     final entryInput = _controller.text;
     final shareText =
         "Journal Entry:\n $entryInput\n"
@@ -92,7 +94,21 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
       isShared: 1, // Mark as shared
     );
     // Save the current entry to the database
-    JournalDatabase.instance.updateEntry(currentEntry!);
+    sharedCompleted = await JournalDatabase.instance.updateEntry(currentEntry!);
+    if (sharedCompleted != 0) {
+      NotificationService.showSuccessDialog(
+        context,
+        'Your entry has been flagged as shared.',
+      );
+      return;
+    } else {
+      if (kDebugMode) {
+        print("Failed to update entry");
+      }
+    }
+    // if (kDebugMode) {
+    //   print("Updated entry with ID: $sharedCompleted");
+    // }
 
     // Use the saved phone number if available, otherwise show error
     if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
