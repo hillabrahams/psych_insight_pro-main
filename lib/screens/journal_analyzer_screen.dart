@@ -13,6 +13,7 @@ import '../models/journal_entry.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/notification_service.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 
 class JournalAnalyzerScreen extends StatefulWidget {
   const JournalAnalyzerScreen({super.key});
@@ -127,11 +128,13 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
 
   void _submitText() async {
     final entryInput = _controller.text;
+    context.loaderOverlay.show();
     final result = await analyzeEntry(entryInput);
 
     if (result != null) {
       // final detectedNeglect = isNeglectFuzzy(entryInput);
       // final detectedRepair = isRepairFuzzy(entryInput);
+
       final newEntry = JournalEntry(
         entry_text: entryInput,
         score: result['score'],
@@ -230,6 +233,10 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         print('Error: $e');
       }
       return null;
+    } finally {
+      if (mounted) {
+        context.loaderOverlay.hide();
+      }
     }
   }
 
@@ -272,55 +279,26 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Analyze Journal Entry")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _controller,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: "Enter your journal entry",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                textStyle: const TextStyle(fontSize: 16),
-              ),
-              onPressed: _submitText,
-              child: const Text("Analyze and Save"),
-            ),
-            if (score != null) ...[
+      body: LoaderOverlay(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
               const SizedBox(height: 20),
-              if (sentimentScore != null && sentimentScore! >= 1) ...[
-                Image.asset('assets/images/care1.png'),
-              ],
-              if (sentimentScore != null && sentimentScore! <= -1) ...[
-                Image.asset('assets/images/abuse1.png'),
-              ],
-              if (isNeglect != null && isNeglect! == 1) ...[
-                Image.asset('assets/images/neglect1.png'),
-              ],
-              if (isRepair != null && isRepair! == 1) ...[
-                Image.asset('assets/images/repair1.png'),
-              ],
-              Text("Score: $score", style: const TextStyle(fontSize: 18)),
-              Text(
-                "Reasoning: $reasoning",
-                style: const TextStyle(fontSize: 16),
+              const Text(
+                "Analyze your journal entry",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              Text(
-                "Confidence: $confidence",
-                style: const TextStyle(fontSize: 16),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _controller,
+                maxLines: 6,
+                decoration: const InputDecoration(
+                  labelText: "Enter your journal entry",
+                  border: OutlineInputBorder(),
+                ),
               ),
+              const SizedBox(height: 12),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
@@ -331,11 +309,48 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
                   ),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                onPressed: _share,
-                child: const Text("Share"),
+                onPressed: _submitText,
+                child: const Text("Analyze and Save"),
               ),
+              if (score != null) ...[
+                const SizedBox(height: 20),
+                if (sentimentScore != null && sentimentScore! >= 1) ...[
+                  Image.asset('assets/images/care1.png'),
+                ],
+                if (sentimentScore != null && sentimentScore! <= -1) ...[
+                  Image.asset('assets/images/abuse1.png'),
+                ],
+                if (isNeglect != null && isNeglect! == 1) ...[
+                  Image.asset('assets/images/neglect1.png'),
+                ],
+                if (isRepair != null && isRepair! == 1) ...[
+                  Image.asset('assets/images/repair1.png'),
+                ],
+                Text("Score: $score", style: const TextStyle(fontSize: 18)),
+                Text(
+                  "Reasoning: $reasoning",
+                  style: const TextStyle(fontSize: 16),
+                ),
+                Text(
+                  "Confidence: $confidence",
+                  style: const TextStyle(fontSize: 16),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                  onPressed: _share,
+                  child: const Text("Share"),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
