@@ -1,5 +1,3 @@
-// Full reports_screen.dart with TTS voice playback for entries
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -25,6 +23,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   final FlutterTts flutterTts = FlutterTts();
   bool _loading = false;
   JournalEntry? _selectedEntry;
+  int _neglectCount = 0;
+  int _repairCount = 0;
+  int _sharedCount = 0;
+  int _bidCount = 0;
 
   Future<void> _speakEntry(JournalEntry entry) async {
     await flutterTts.stop();
@@ -33,8 +35,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
         '${entry.entry_text}. '
         'Reasoning: ${entry.reasoning}. '
         'Confidence: ${entry.confidence}. '
-        'Neglect: ${entry.isNeglect == 1 ? "Yes" : "No"}.';
-    'Repair: ${entry.isRepair == 1 ? "Yes" : "No"}.';
+        'Neglect: ${entry.isNeglect == 1 ? "Yes" : "No"}. '
+        'Repair: ${entry.isRepair == 1 ? "Yes" : "No"}.';
     await flutterTts.speak(message);
   }
 
@@ -95,18 +97,56 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     try {
       final results = await _dbHelper.getEntriesBetweenDates(start, end);
+      final neglectCount = await _dbHelper.getColumnCountBetweenDates(
+        start,
+        end,
+        'isNeglect',
+      );
+      final repairCount = await _dbHelper.getColumnCountBetweenDates(
+        start,
+        end,
+        'isRepair',
+      );
+      final sharedCount = await _dbHelper.getColumnCountBetweenDates(
+        start,
+        end,
+        'isShared',
+      );
+      final bidCount = await _dbHelper.getColumnCountBetweenDates(
+        start,
+        end,
+        'isBid',
+      );
       setState(() {
         _entries = results;
+        _neglectCount = neglectCount;
+        _repairCount = repairCount;
+        _sharedCount = sharedCount;
+        _bidCount = bidCount;
       });
-    } catch (e) {
-      if (mounted) {
-        NotificationService.showErrorDialog(context, 'Failed to load entries.');
-      }
     } finally {
       setState(() {
         _loading = false;
       });
     }
+  }
+
+  TableRow _buildTableRow(String label, String value) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(value, textAlign: TextAlign.right),
+        ),
+      ],
+    );
   }
 
   Widget _buildLineChart(double width) {
@@ -121,7 +161,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final scoreSpots = <FlSpot>[];
     final regressionSpots = <FlSpot>[];
     bool useSlopeforlineColor = false;
-    Color lineColor = Colors.green; // Define lineColor with a default value
+    Color lineColor = Colors.green;
 
     List<double> xVals = [];
     List<double> yVals = [];
@@ -150,12 +190,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final intercept = (ySum - slope * xSum) / n;
 
     if (useSlopeforlineColor) {
-      lineColor =
-          slope >= 0
-              ? Colors.green
-              : Colors.red; // Update lineColor based on slope
-    } else {
-      lineColor = Colors.green; // Default color if slope is not used
+      lineColor = slope >= 0 ? Colors.green : Colors.red;
     }
 
     regressionSpots.addAll(xVals.map((x) => FlSpot(x, slope * x + intercept)));
@@ -293,66 +328,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ],
           ),
         ),
-        //   if (_selectedEntry != null) ...[
-        //     const SizedBox(height: 10),
-        //     Container(
-        //       padding: const EdgeInsets.all(12),
-        //       decoration: BoxDecoration(
-        //         color: Colors.grey[200],
-        //         borderRadius: BorderRadius.circular(10),
-        //       ),
-        //       child: Column(
-        //         crossAxisAlignment: CrossAxisAlignment.start,
-        //         children: [
-        //           Row(
-        //             children: [
-        //               const Text(
-        //                 'Entry Details',
-        //                 style: TextStyle(fontWeight: FontWeight.bold),
-        //               ),
-        //               const Spacer(),
-        //               IconButton(
-        //                 icon: const Icon(Icons.volume_up),
-        //                 onPressed: () => _speakEntry(_selectedEntry!),
-        //               ),
-        //               IconButton(
-        //                 icon: const Icon(Icons.close),
-        //                 onPressed: () => setState(() => _selectedEntry = null),
-        //               ),
-        //             ],
-        //           ),
-        //           Text(
-        //             'Score: ${_selectedEntry!.score}',
-        //             style: const TextStyle(fontWeight: FontWeight.bold),
-        //           ),
-        //           const SizedBox(height: 4),
-        //           Text(_selectedEntry!.text),
-        //           const SizedBox(height: 8),
-        //           const Text(
-        //             'Reasoning:',
-        //             style: TextStyle(fontWeight: FontWeight.bold),
-        //           ),
-        //           Text(_selectedEntry!.reasoning),
-        //           const SizedBox(height: 8),
-        //           Text('Confidence: ${_selectedEntry!.confidence}'),
-        //           Text('Neglect: ${_selectedEntry!.isNeglect ? "Yes" : "No"}'),
-        //         ],
-        //       ),
-        //     ),
-        //   ],
-        // ],
+        const SizedBox(height: 12),
+
+        if (_selectedEntry == null)
+          Table(
+            border: TableBorder.all(color: Colors.grey),
+            columnWidths: const {0: FlexColumnWidth(2), 1: FlexColumnWidth(1)},
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              _buildTableRow('Neglect Count', _neglectCount.toString()),
+              _buildTableRow('Repair Count', _repairCount.toString()),
+              _buildTableRow('Shared Count', _sharedCount.toString()),
+              _buildTableRow('Bid Count', _bidCount.toString()),
+            ],
+          ),
+
         if (_selectedEntry != null) ...[
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white, // Tooltip background
+              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
             ),
             child: DefaultTextStyle(
-              style: const TextStyle(
-                color: Colors.blue,
-              ), // All tooltip text in blue
+              style: const TextStyle(color: Colors.blue),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

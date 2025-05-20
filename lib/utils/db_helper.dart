@@ -93,22 +93,21 @@ class DBHelper {
     );
   }
 
-  Future<List<JournalEntry>> getNeglectEntriesBetweenDates(
+  Future<int> getColumnCountBetweenDates(
     String start,
     String end,
+    String columnName,
   ) async {
     final db = await database;
     try {
-      final result = await db.query(
-        table,
-        where: 'timestamp BETWEEN ? AND ? AND isNeglect = 1',
-        whereArgs: [start, end],
-        orderBy: 'timestamp ASC',
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) AS total FROM $table WHERE timestamp BETWEEN ? AND ? AND $columnName = 1',
+        [start, end],
       );
-      return result.map((e) => JournalEntry.fromMap(e)).toList();
+      return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
-      if (kDebugMode) print('Neglect query error: $e');
-      return [];
+      if (kDebugMode) print('$columnName count query error: $e');
+      return 0;
     }
   }
 }
