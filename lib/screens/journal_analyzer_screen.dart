@@ -174,7 +174,8 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   }
 
   Future<Map<String, dynamic>?> analyzeEntry(String entryText) async {
-    const String url = "https://c21c-217-180-196-104.ngrok-free.app/analyze";
+    // const String url = "https://c21c-217-180-196-104.ngrok-free.app/analyze";
+    const String url = "https://3f31b6c446ea.ngrok.app/analyze";
     String currentUrl = url;
     int redirectCount = 0;
     const int maxRedirects = 5;
