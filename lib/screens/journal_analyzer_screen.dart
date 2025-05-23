@@ -107,9 +107,6 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
         print("Failed to update entry");
       }
     }
-    // if (kDebugMode) {
-    //   print("Updated entry with ID: $sharedCompleted");
-    // }
 
     // Use the saved phone number if available, otherwise show error
     if (_savedPhoneNumber != null && _savedPhoneNumber!.isNotEmpty) {
@@ -132,9 +129,6 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
     final result = await analyzeEntry(entryInput);
 
     if (result != null) {
-      // final detectedNeglect = isNeglectFuzzy(entryInput);
-      // final detectedRepair = isRepairFuzzy(entryInput);
-
       final newEntry = JournalEntry(
         entry_text: entryInput,
         score: result['score'],
@@ -174,7 +168,6 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   }
 
   Future<Map<String, dynamic>?> analyzeEntry(String entryText) async {
-    // const String url = "https://c21c-217-180-196-104.ngrok-free.app/analyze";
     const String url = "https://3f31b6c446ea.ngrok.app/analyze";
     String currentUrl = url;
     int redirectCount = 0;
