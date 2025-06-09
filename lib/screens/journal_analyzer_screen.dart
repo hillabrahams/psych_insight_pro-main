@@ -41,6 +41,8 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   int? updateId = 0;
   int? sharedCompleted = 0;
 
+  bool isActive = true; // Track if the Analyze and Save button is active
+
   @override
   void initState() {
     super.initState();
@@ -124,6 +126,8 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   }
 
   void _submitText() async {
+    isActive = false; // Disable the button to prevent multiple submissions
+    setState(() {});
     final entryInput = _controller.text;
     context.loaderOverlay.show();
     final result = await analyzeEntry(entryInput);
@@ -303,7 +307,7 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
                   ),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                onPressed: _submitText,
+                onPressed: isActive ? _submitText : null,
                 child: const Text("Analyze and Save"),
               ),
               if (score != null) ...[
