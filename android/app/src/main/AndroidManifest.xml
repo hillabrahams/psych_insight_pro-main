@@ -4,7 +4,7 @@
     android:networkSecurityConfig="@xml/network_security_config"
     android:label="psych_insight_pro"
     android:enableOnBackInvokedCallback="true"
-    android:icon="@mipmap/ic_launcher">
+    android:icon="@mipmap/launch_image">
 
         <activity
             android:name=".MainActivity"
