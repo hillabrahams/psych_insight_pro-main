@@ -128,7 +128,8 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
   void _submitText() async {
     isActive = false; // Disable the button to prevent multiple submissions
     setState(() {});
-    final entryInput = _controller.text;
+    final entryInput = _controller.text.trim();
+
     context.loaderOverlay.show();
     final result = await analyzeEntry(entryInput);
 
@@ -307,7 +308,21 @@ class _JournalAnalyzerScreenState extends State<JournalAnalyzerScreen> {
                   ),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                onPressed: isActive ? _submitText : null,
+                onPressed: () {
+                  text = _controller.text.trim();
+                  if (text == null || text?.isEmpty == true) {
+                    NotificationService.showWarningDialog(
+                      context,
+                      'Please enter a journal entry to analyze.',
+                    );
+                    return;
+                  }
+                  if (isActive) {
+                    _submitText();
+                    isActive = false; // Disable the button after submission
+                  }
+                }, //isActive ? _submitText : null,
+
                 child: const Text("Analyze and Save"),
               ),
               if (score != null) ...[
