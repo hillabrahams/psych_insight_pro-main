@@ -45,12 +45,12 @@ dependencies:
   sqflite: ^2.0.0+4
   http: any
 
-  fuzzywuzzy: ^1.2.0
+  #fuzzywuzzy: ^1.2.0
   #rapidfuzz: ^0.1.1
 
   fl_chart: ^0.64.0
 
-  syncfusion_flutter_charts: ^20.4.48
+  #syncfusion_flutter_charts: ^20.4.48
 
   flutter_tts: ^3.6.3 
 
@@ -59,6 +59,9 @@ dependencies:
   shared_preferences: ^2.2.2
   loader_overlay: ^5.0.0
   #phone_numbers_parser: ^5.0.0
+
+  flutter_appauth: ^9.0.1
+  flutter_secure_storage: ^8.0.0
 
 
 

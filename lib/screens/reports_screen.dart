@@ -14,6 +14,8 @@ class ReportsScreen extends StatefulWidget {
   _ReportsScreenState createState() => _ReportsScreenState();
 }
 
+enum _Highlight { neglect, repair, shared, bid }
+
 class _ReportsScreenState extends State<ReportsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
@@ -27,6 +29,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   int _repairCount = 0;
   int _sharedCount = 0;
   int _bidCount = 0;
+
+  // NEW: which category is highlighted (controls dot stroke width)
+  _Highlight? _highlight;
 
   Future<void> _speakEntry(JournalEntry entry) async {
     await flutterTts.stop();
@@ -86,6 +91,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _loading = true;
       _entries = [];
       _selectedEntry = null;
+      _highlight = null; // reset highlight on new load
     });
 
     final start = _toDateTimeString(_startDate!);
@@ -144,6 +150,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text(value, textAlign: TextAlign.right),
+        ),
+      ],
+    );
+  }
+
+  // NEW: a row that becomes link-like and clickable when value > 0
+  TableRow _buildInteractiveCountRow({
+    required String label,
+    required int value,
+    required _Highlight category,
+  }) {
+    final isActive = value > 0;
+    final isSelected = _highlight == category;
+
+    final labelWidget = Padding(
+      padding: const EdgeInsets.all(8.0),
+      child:
+          isActive
+              ? InkWell(
+                onTap: () {
+                  setState(() {
+                    // toggle on/off
+                    _highlight = isSelected ? null : category;
+                    _selectedEntry =
+                        null; // optional: clear details when switching
+                  });
+                },
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              )
+              : Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+    );
+
+    return TableRow(
+      children: [
+        labelWidget,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(value.toString(), textAlign: TextAlign.right),
         ),
       ],
     );
@@ -231,14 +285,32 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   dotData: FlDotData(
                     show: true,
                     getDotPainter: (spot, _, __, ___) {
-                      final color =
+                      // Determine positive/negative color (unchanged)
+                      final baseColor =
                           (spot.y >= 1 && spot.y <= 10)
                               ? Colors.green
                               : Colors.red;
+
+                      // NEW: bump strokeWidth to 2 if this dot matches the active category
+                      double strokeW = 1.0;
+                      final idx = spot.x.round();
+                      if (_highlight != null &&
+                          idx >= 0 &&
+                          idx < _entries.length) {
+                        final e = _entries[idx];
+                        final match = switch (_highlight!) {
+                          _Highlight.neglect => e.isNeglect == 1,
+                          _Highlight.repair => e.isRepair == 1,
+                          _Highlight.shared => e.isShared == 1,
+                          _Highlight.bid => e.isBid == 1,
+                        };
+                        if (match) strokeW = 3.0;
+                      }
+
                       return FlDotCirclePainter(
                         radius: 4,
-                        color: color,
-                        strokeWidth: 1,
+                        color: baseColor,
+                        strokeWidth: strokeW,
                         strokeColor: Colors.black,
                       );
                     },
@@ -292,10 +364,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     },
                   ),
                 ),
-                topTitles: AxisTitles(
+                topTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-                rightTitles: AxisTitles(
+                rightTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
               ),
@@ -336,10 +408,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
             columnWidths: const {0: FlexColumnWidth(2), 1: FlexColumnWidth(1)},
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
-              _buildTableRow('Neglect Count', _neglectCount.toString()),
-              _buildTableRow('Repair Count', _repairCount.toString()),
-              _buildTableRow('Shared Count', _sharedCount.toString()),
-              _buildTableRow('Bid Count', _bidCount.toString()),
+              _buildInteractiveCountRow(
+                label: 'Neglect Count',
+                value: _neglectCount,
+                category: _Highlight.neglect,
+              ),
+              _buildInteractiveCountRow(
+                label: 'Repair Count',
+                value: _repairCount,
+                category: _Highlight.repair,
+              ),
+              _buildInteractiveCountRow(
+                label: 'Shared Count',
+                value: _sharedCount,
+                category: _Highlight.shared,
+              ),
+              _buildInteractiveCountRow(
+                label: 'Bid Count',
+                value: _bidCount,
+                category: _Highlight.bid,
+              ),
             ],
           ),
 
