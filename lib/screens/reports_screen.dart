@@ -30,7 +30,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   int _sharedCount = 0;
   int _bidCount = 0;
 
-  // NEW: which category is highlighted (controls dot stroke width)
+  // Which category is highlighted (controls dot stroke width/color)
   _Highlight? _highlight;
 
   Future<void> _speakEntry(JournalEntry entry) async {
@@ -123,6 +123,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         end,
         'isBid',
       );
+
       setState(() {
         _entries = results;
         _neglectCount = neglectCount;
@@ -155,7 +156,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // NEW: a row that becomes link-like and clickable when value > 0
+  bool _entryMatchesHighlight(JournalEntry e) {
+    if (_highlight == null) return false;
+    switch (_highlight!) {
+      case _Highlight.neglect:
+        return e.isNeglect == 1;
+      case _Highlight.repair:
+        return e.isRepair == 1;
+      case _Highlight.shared:
+        return e.isShared == 1;
+      case _Highlight.bid:
+        return e.isBid == 1;
+    }
+  }
+
+  // Row that becomes link-like & clickable when value > 0; toggles blue ↔ yellow
   TableRow _buildInteractiveCountRow({
     required String label,
     required int value,
@@ -163,6 +178,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }) {
     final isActive = value > 0;
     final isSelected = _highlight == category;
+    final linkColor = isSelected ? Colors.yellow : Colors.blue;
 
     final labelWidget = Padding(
       padding: const EdgeInsets.all(8.0),
@@ -171,23 +187,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ? InkWell(
                 onTap: () {
                   setState(() {
-                    // toggle on/off
-                    _highlight = isSelected ? null : category;
+                    _highlight = isSelected ? null : category; // toggle
                     _selectedEntry =
-                        null; // optional: clear details when switching
+                        null; // optionally clear details when switching
                   });
                 },
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: linkColor, // blue ↔ yellow
                     decoration: TextDecoration.underline,
+                    decorationColor: linkColor, // underline blue ↔ yellow
                   ),
                 ),
               )
               : Text(
-                label,
+                label, // inactive: plain label
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
     );
@@ -217,8 +233,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     bool useSlopeforlineColor = false;
     Color lineColor = Colors.green;
 
-    List<double> xVals = [];
-    List<double> yVals = [];
+    final xVals = <double>[];
+    final yVals = <double>[];
 
     for (int i = 0; i < _entries.length; i++) {
       final x = i.toDouble();
@@ -278,6 +294,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
               gridData: FlGridData(show: false),
               lineBarsData: [
+                // Scatter dots (scores)
                 LineChartBarData(
                   spots: scoreSpots,
                   isCurved: false,
@@ -285,37 +302,36 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   dotData: FlDotData(
                     show: true,
                     getDotPainter: (spot, _, __, ___) {
-                      // Determine positive/negative color (unchanged)
+                      // Fill color by sentiment
                       final baseColor =
                           (spot.y >= 1 && spot.y <= 10)
                               ? Colors.green
                               : Colors.red;
 
-                      // NEW: bump strokeWidth to 2 if this dot matches the active category
+                      // Default stroke
                       double strokeW = 1.0;
+                      Color strokeC = Colors.black;
+
+                      // If highlighted category matches this entry, use yellow w/ width 3
                       final idx = spot.x.round();
-                      if (_highlight != null &&
-                          idx >= 0 &&
-                          idx < _entries.length) {
+                      if (idx >= 0 && idx < _entries.length) {
                         final e = _entries[idx];
-                        final match = switch (_highlight!) {
-                          _Highlight.neglect => e.isNeglect == 1,
-                          _Highlight.repair => e.isRepair == 1,
-                          _Highlight.shared => e.isShared == 1,
-                          _Highlight.bid => e.isBid == 1,
-                        };
-                        if (match) strokeW = 3.0;
+                        if (_entryMatchesHighlight(e)) {
+                          strokeW = 3.0; // requested width = 3
+                          strokeC = Colors.yellow; // requested color = yellow
+                        }
                       }
 
                       return FlDotCirclePainter(
                         radius: 4,
                         color: baseColor,
                         strokeWidth: strokeW,
-                        strokeColor: Colors.black,
+                        strokeColor: strokeC,
                       );
                     },
                   ),
                 ),
+                // Regression / trend line
                 LineChartBarData(
                   spots: regressionSpots,
                   isCurved: false,
